@@ -77,7 +77,42 @@ php artisan serve
 
 Open `http://localhost:8000`, register an account, and log in.
 
-To use MySQL instead, set `DB_CONNECTION=mysql` and the `DB_*` values in `.env` before running the migrations.
+### Using MySQL and a local domain
+
+The assessment was tested with MySQL/MariaDB at `http://inventory.test/`. To run it that way:
+
+1. Create a MySQL database (for example in phpMyAdmin).
+2. Set the database values in `.env`:
+
+   ```
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=<database_name>
+   DB_USERNAME=<database_username>
+   DB_PASSWORD=<database_password>
+   ```
+
+3. Run `php artisan migrate --seed`.
+4. Point a local virtual host for `inventory.test` at the project's `public/` folder (Laragon, Valet or Herd can do this for you).
+
+## Testing checklist
+
+| Area | What to check |
+| --- | --- |
+| Authentication | Register validates name (letters only), email format and password length (8+). A wrong password shows "These credentials do not match." Logging out asks for confirmation. Visiting `/dashboard` while logged out redirects to `/login`. |
+| Dashboard | Time-based greeting with the user's name, four stat cards, and the 6 latest transactions ("No transactions yet." when empty). |
+| Categories | Add/edit in a right-side offcanvas panel that stays open on validation errors. Success toasts, and delete asks for confirmation. |
+| Materials | Duplicate names in the same category are rejected. Deleting a material hides it but keeps the row with `deleted_at` set. Live search and a reload button refresh the table without reloading the page. |
+| Inward / Outward | Choosing a category loads only its materials. Positive quantity = inward, negative = outward. Flatpickr date picker, and every required field is validated. |
+| Manage Materials | Current balance = opening balance + all transactions (e.g. 100 + 50 − 30 = 120). Negative balances are shown in red. |
+| Tables | First/Prev/page numbers/Next/Last pagination, 10/25/50/100 rows per page, one search box per page. Offcanvas panels only close with the X button. |
+
+To check soft-deleted materials directly in the database:
+
+```sql
+SELECT * FROM materials WHERE deleted_at IS NOT NULL;
+```
 
 ## Author
 
